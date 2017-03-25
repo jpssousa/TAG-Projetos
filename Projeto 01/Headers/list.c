@@ -1,13 +1,6 @@
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-
-
-typedef struct nodeL {
-    int data;
-    struct nodeL * next;
-    struct nodeL * prev;
-} node_L;
+#include "list.h"
 
 
 node_L * createList (int data) {
