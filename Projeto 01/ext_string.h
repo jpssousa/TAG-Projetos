@@ -9,66 +9,25 @@
 	Means that the hole code below going to be copied in any file that includes it
 	BubbleReason: too many files for a small project!
 */
-/* This code is public domain -- Will Hartung 4/9/09 */
-size_t getline(char **lineptr, size_t *n, FILE *stream) {
-    char *bufptr = NULL;
-    char *p = bufptr;
-    size_t size;
-    int c;
 
-    if (lineptr == NULL) {
-        return -1;
+    #ifndef _WIN32 /*@asm95: _WIN32 flag enables windows.h inclusion in localization.h*/
+    char *strcpy (char *orig, char *dest)
+    {
+        int i=0;
+        while( (dest[i] = orig[i]) )
+            i++;
+        return dest;
     }
-    if (stream == NULL) {
-        return -1;
-    }
-    if (n == NULL) {
-        return -1;
-    }
-    bufptr = *lineptr;
-    size = *n;
+    #endif
 
-    c = fgetc(stream);
-    if (c == EOF) {
-        return -1;
-    }
-    if (bufptr == NULL) {
-        bufptr = malloc(128);
-        if (bufptr == NULL) {
-            return -1;
-        }
-        size = 128;
-    }
-    p = bufptr;
-    while(c != EOF) {
-        if ((p - bufptr) > (size - 1)) {
-            size = size + 128;
-            bufptr = realloc(bufptr, size);
-            if (bufptr == NULL) {
-                return -1;
-            }
-        }
-        *p++ = c;
-        if (c == '\n') {
-            break;
-        }
-        c = fgetc(stream);
-    }
-
-    *p++ = '\0';
-    *lineptr = bufptr;
-    *n = size;
-
-    return p - bufptr - 1;
-}
-
-char *findCharAt(char *str, char c, int idx){
-    while (idx && str){
+char *findNextChar(char *str, char c){
+    while (*str != '\0'){
         if (*str == c)
-            idx--;
+            break;
         str++;
     }
 
-    return str ? str-- : NULL;
+    return str;
 }
+
 #endif
