@@ -3,21 +3,31 @@
 #include "list.h"
 
 
-node_L * createList (int data) {
+node_L * createList (void * data) {
     node_L * list = (node_L *) malloc (sizeof (node_L));
     if (list) {
         list->data = data;
         list->next = NULL;
         list->prev = NULL;
-
-        return node_L;
     }
-    return NULL;
+
+    return list;
+}
+
+void destroyList (node_L * head){
+    node_L * cur, * next;
+
+    cur = head;
+    while(cur){
+        next = cur->next;
+        free(cur);
+        cur = next;
+    }
 }
 
 
-int pushToEnd (node_L * head, int data) {
-    if (head == NULL) return 0;
+void * pushToEnd (node_L * head, void * data) {
+    if (head == NULL) return NULL;
 
     node_L * current = head;
 
@@ -30,12 +40,12 @@ int pushToEnd (node_L * head, int data) {
     current->next->data = data;
     current->next->next = NULL;
 
-    return 1;
+    return data;
 }
 
 
-int pushToBegining (node_L * head, int data) {
-    if (head == NULL) return 0;
+node_L * pushToBegining (node_L * head, void * data) {
+    if (head == NULL) return NULL;
 
     node_L * current = head;
 
@@ -48,27 +58,30 @@ int pushToBegining (node_L * head, int data) {
     current->prev->data = data;
     current->prev->prev = NULL;
 
-    return 1;
+    return current->prev;
 }
 
 
-int insertHere (node_L * head, int data) {
-    if (head == NULL) return 0;
+void * insertHere (node_L * head, void * data) {
+    if (head == NULL) return NULL;
 
     node_L * new = createList (data);
     node_L * aux = head->next;
     head->next = new;
     new->prev = head;
-    aux->prev = aux;
+    new->next = aux;
 
-    return 1;
+    if (aux)
+        aux->prev = new;
+
+    return data;
 }
 
 
-int popThis (node_L * head) {
-    if (head == NULL) return 0;
+void * popThis (node_L * head) {
+    if (head == NULL) return NULL;
 
-    int dt = head->data;
+    void * dt = head->data;
     if (head->prev != NULL) {
         head->prev->next = head->next;
     }
@@ -81,29 +94,30 @@ int popThis (node_L * head) {
 }
 
 
-int popData (node_L * head, int data) {
+void * popData (node_L * head, void * data, int (*compareFunction)(void*, void*)) {
     if (head == NULL) return 0;
 
     node_L * this = head;
     while (this->next != NULL && this->data != data) {
         this = this->next;
     }
-    if (this->data == data) {
+    if (compareFunction(this->data, data)){
         return popThis (this);
     }
-    return 0;
+    return NULL;
 }
 
 
-int getElement (node_L * head, int data) {
+void * getElement (node_L * head, void * data, int (*compareFunction)(void*, void*)) {
     if (head == NULL) return 0;
 
     node_L * this = head;
     while (this->next != NULL && this->data != data) {
         this = this->next;
     }
-    if (this->data == data) {
+    if (compareFunction(this->data, data)){
         return this->data;
     }
-    return 0;
+    return NULL;
 }
+

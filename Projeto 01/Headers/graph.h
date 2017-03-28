@@ -2,33 +2,32 @@
 #define _HEADER_GRAPH_H_
 
 
-typedef struct adjList_node;
-typedef struct vertex;
-typedef struct graph;
+typedef struct adjList t_node;
+typedef struct vertex t_vertex;
+typedef struct graph t_graph;
 
 
 struct adjList { /* Node of an adjacency list */
-    t_vertex * vertex; /* Pointer to adjacent vertex */
-    struct adjList * next; /* Pointer to next node */
-    struct adjList * prev;
-} t_node;
+    t_vertex    * vertex; /* Pointer to adjacent vertex */
+    t_node * next; /* Pointer to next node */
+    t_node * prev;
+};
 
 struct vertex { /* Vertex structre */
     int length; /* Length of adjacency list attached to that vertex */
     void * content; /* Content stored in vetex */
-    adjList * head; /* Pointer to adjacency list of that vertex */
-} t_vertex;
+    t_node * head; /* Pointer to adjacency list of that vertex */
+};
 
 struct graph { /* Graph structure */
     int size; /* Optional: easier to declare a graph with "size" vertexes */
     t_vertex * vertexArray; /* Array of vertexes on the graph */
-} t_graph;
+};
 
+/*void error (char * msg);*/
 
-void error (char * msg) { /* Print error to output */
-    printf("[Error:] %s\nEnding running file...\n", msg);
-    exit(1)
-}
-
+t_graph *createGraph    (int n);
+void    destroyGraph    (t_graph * G);
+void    addEdge         (t_graph * G, int src, int dest);
 
 #endif
