@@ -62,6 +62,23 @@ node_L * pushToBegining (node_L * head, void * data) {
 }
 
 
+node_L * insertHere2 (node_L * head, void * data) {
+    if (head == NULL){
+        return createList(data);
+    }
+
+    node_L * new = createList (data);
+    node_L * aux = head->next;
+    head->next = new;
+    new->prev = head;
+    new->next = aux;
+
+    if (aux)
+        aux->prev = new;
+
+    return head;
+}
+
 void * insertHere (node_L * head, void * data) {
     if (head == NULL) return NULL;
 
@@ -76,7 +93,6 @@ void * insertHere (node_L * head, void * data) {
 
     return data;
 }
-
 
 void * popThis (node_L * head) {
     if (head == NULL) return NULL;

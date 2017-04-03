@@ -19,6 +19,7 @@ void 	* pushToEnd 		(node_L * head, void * data);
 node_L 	* pushToBegining	(node_L * head, void * data);
 
 void 	* insertHere 		(node_L * head, void * data);
+node_L 	* insertHere2 		(node_L * head, void * data);
 
 #endif
 
