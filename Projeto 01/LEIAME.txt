@@ -1,0 +1,15 @@
+2017-1
+Teoria e Aplicação de Grafos - Turma A
+Prof. Díbio Borges
+
+Aluno: Cristiano Cardoso 		15/0058349
+Aluno: João Pedro Silva Sousa	15/0038381
+
+0. Requisitos
+gcc (Ubuntu 5.4.0-6ubuntu1~16.04.4) 5.4.0 20160609
+1. Compilação
+Entre no terminal o seguinte comando na pasta de extração dos arquivos fonte:
+$ make
+2. Executando
+$ ./amigos
+
