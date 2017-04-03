@@ -120,6 +120,25 @@ t_vertex * createVertex (void * content) {
     return newVertex;
 }
 
+int isEdge (t_graph * G, int src, int dest){
+    t_node *srcEdges = G->vertexArray[src].head;
+
+    t_vertex *destVertex = &G->vertexArray[dest];
+    t_vertex *curVertex;
+
+    while(srcEdges){
+        curVertex = srcEdges->vertex;
+
+        if (destVertex == curVertex){
+            return 1;
+        }
+
+        srcEdges = srcEdges->next;
+    }
+
+    return 0;
+}
+
 
 void addEdge (t_graph * G, int src, int dest) {
     if (G == NULL) {
@@ -132,19 +151,23 @@ void addEdge (t_graph * G, int src, int dest) {
         return;
     }
 
+    if ( isEdge(G, src, dest)){
+        return;
+    }
+
     t_node * l = findEndOfList (G->vertexArray[src].head);
     t_node * m = findEndOfList (G->vertexArray[dest].head);
 
     /*@asm95: sad code below*/
     if(!l){
         t_node *newNode = (t_node *) malloc (sizeof (t_node));
-        newNode->vertex = &G->vertexArray[src];
+        newNode->vertex = &G->vertexArray[dest];
         newNode->next = NULL;
         newNode->prev = NULL;
         G->vertexArray[src].head = newNode;
     } else {
         l->next = (t_node *) malloc (sizeof (t_node));
-        l->next->vertex = &G->vertexArray[src];
+        l->next->vertex = &G->vertexArray[dest];
         l->next->prev = l;
         l->next->next = NULL;
     }
@@ -158,7 +181,7 @@ void addEdge (t_graph * G, int src, int dest) {
         G->vertexArray[dest].head = newNode;
     } else {
         m->next = (t_node *) malloc (sizeof (t_node));
-        m->next->vertex = &G->vertexArray[dest];
+        m->next->vertex = &G->vertexArray[src];
         m->next->prev = m;
         m->next->next = NULL;
     }
