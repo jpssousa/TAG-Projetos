@@ -162,6 +162,7 @@ void addEdge (t_graph * G, int src, int dest) {
         m->next->prev = m;
         m->next->next = NULL;
     }
+    (G->vertexArray[dest].length)++;
 
 }
 
