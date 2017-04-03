@@ -182,6 +182,20 @@ void prettyPrintVertexList (node_L *vList){
 	printf("\n");
 }
 
+void printVertexList (node_L *list){
+
+	printf("{");
+	while(list){
+		aluno *curAluno = (aluno*)((t_vertex*)list->data)->content;
+		int alunoID = (curAluno - studentObjectsPool);
+		/*printf(" %d;", curAluno->matricula);*/
+		printf(" %d;", alunoID+1);
+
+
+		list = list->next;
+	}
+	printf(" }");
+}
 
 int main (int argc, const char *argv[]){
 	FILE 	*infile;
@@ -210,6 +224,9 @@ int main (int argc, const char *argv[]){
 	node_L *alunoGrau = AlunoSortedList();
 	prettyPrintVertexList(alunoGrau);
 	destroyList(alunoGrau);
+
+	/*p = gVertexList(studentGraph);*/
+	printVertexList(alunoGrau);
 
 	engineRequestStageDelete();
 	fclose(infile);
