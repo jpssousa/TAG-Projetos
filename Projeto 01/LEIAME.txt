@@ -13,3 +13,9 @@ $ make
 2. Executando
 $ ./amigos
 
+3. O programa lerá do arquivo amigos_tag20171.txt e irá imprimir uma lista contendo os estudantes de maior clique e em seguida todos os cliques correspondentes.
+
+Obs: Não cosneguimos realizar a seleção do maior clique, porém pode-se ver na lista que o maior possui 6 elementos. Todos os elementos do conjunto de vértices impressos possuem o id do aluno correspondente à linha no arquivo de entrada. Por exemplo em clique número 0 temos o elemento 9 corrsponde ao 9º aluno correspondente a 9ª linha do arquivo. Exemplo: linha 1 é ocupado por 'JEAN PIERRE MANSO D'ALMEIDA SISSÉ'
+
+4. Caso haja alguma dúvida nos contate pelo e-mail:
+crissonicx2@gmail.com

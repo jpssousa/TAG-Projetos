@@ -72,7 +72,7 @@ int addAluno(int matricula, char *nome){
 	return idAluno;
 }
 
-int verboseEnabled = 1;
+int verboseEnabled = 0;
 void printVerbose(const char *format, ...){ /*source: https://goo.gl/sPKGhi*/
 	if (! verboseEnabled)
 		return;
@@ -165,7 +165,17 @@ node_L *AlunoSortedList(){
 	return degreeSoted;
 }
 
+int listSize(node_L *l){
+	int r=0;
+
+	while(l){
+		r++; l = l->next;
+	}
+	return r;
+}
+
 void prettyPrintCliqueList(node_L *l){
+	printf("\n");
 	int i = 0; int alunoID;
 	while(l){
 		node_L *clique;
@@ -193,7 +203,7 @@ void prettyPrintVertexList (node_L *vList){
 	t_vertex 	*cur;
 	aluno 		*theAluno;
 
-	printf("Posição\tMatricula\tNome\tGrau\n");
+	printf("Posiçao\tMatricula\tNome\tGrau\n");
 	while(vList){
 		cur = (t_vertex*)vList->data;
 		theAluno = (aluno*)cur->content;
@@ -206,6 +216,8 @@ void prettyPrintVertexList (node_L *vList){
 }
 
 void printVertexList (node_L *list){
+	if (!verboseEnabled)
+		return;
 
 	printf("{");
 	while(list){
@@ -221,6 +233,8 @@ void printVertexList (node_L *list){
 }
 
 void printAdjList (t_node *adj){
+	if (!verboseEnabled)
+		return;
 
 	printf("{");
 	while(adj){
@@ -237,12 +251,14 @@ void printAdjList (t_node *adj){
 #define edgesOf(v) v->head
 
 void alunoPrint(t_vertex *v){
+	if (!verboseEnabled)
+		return;
+
 	aluno *curAluno = (aluno*)v->content;
 	int alunoID = (curAluno - studentObjectsPool);
-	printf("%d", alunoID+1);	
+	printf("%d", alunoID+1);
 }
 
-/*
 node_L *listIntersection(node_L *a, t_node *b){
 	node_L *newList = emptyList();
 	node_L *cur;
@@ -253,8 +269,8 @@ node_L *listIntersection(node_L *a, t_node *b){
 			t_vertex *v1,*v2;
 			v1 = (t_vertex*)cur->data;
 			v2 = (t_vertex*)b->vertex;
-			printf("v1:"); alunoPrint(v1);
-			printf(" v2:"); alunoPrint(v2); printf("; ");
+			/*printf("v1:"); alunoPrint(v1);
+			printf(" v2:"); alunoPrint(v2); printf("; ");*/
 			if (v1 == v2){
 				newList = insertHere2(newList, v1);
 				break;
@@ -262,36 +278,13 @@ node_L *listIntersection(node_L *a, t_node *b){
 
 			cur = cur->next;
 		}
-		printf("\n");
+		/*printf("\n");*/
 
 		b = b->next;
 	}
-	printf("\n");
+	/*printf("\n");*/
 
 	return newList;
-}*/
-
-node_L *listIntersection(node_L *a, t_node *b){
-    node_L *newList = emptyList();
-    node_L *aux = a;
-    node_L *tmp = b;
- 
-    while (aux) {
-        tmp = b;
-        while (tmp) {
-            t_vertex * v1, * v2;
-            v1 = (t_vertex *) aux->data;
-            v2 = (t_vertex *) tmp->data;
- 
-            if (v1 == v2) newList = insertHere2 (newList, v1);
- 
-            tmp = tmp->next;
-        }
- 
-        aux = aux->next;
-    }
- 
-    return newList;
 }
 
 node_L *listCopy(node_L *l){
@@ -310,7 +303,7 @@ node_L *listRemove(node_L *l, t_vertex *data){
 	node_L *newList = l;
 
 	while(l){
-		t_vertex *w; 
+		t_vertex *w;
 		w = (t_vertex*)l->data;
 
 		if (w == data){
@@ -339,14 +332,40 @@ node_L *listRemove(node_L *l, t_vertex *data){
 	return newList;
 }
 
-node_L *maxCliqueSet;
+node_L *maxCliqueSet = NULL;
+void insertSortedClique (node_L *clique){
+
+	if (!maxCliqueSet){
+		maxCliqueSet = clique;
+		return;
+	}
+	node_L *cur = maxCliqueSet;
+
+	while(cur){
+
+		if (listSize(clique) > listSize(cur)){
+			if (! insertHere(cur->prev, clique)){
+				maxCliqueSet = pushToBegining(maxCliqueSet, clique);
+			}
+			break;
+		}
+
+		if (!cur->next){
+			insertHere(cur, clique);
+			break;
+		}
+		cur = cur->next;
+	}
+}
+
 void _bk(node_L *r, node_L *p, node_L *x){
-	printf("--- _bk\n");
-	printf("\tr: "); printVertexList(r);
-	printf("\tp: "); printVertexList(p);
-	printf("\tx: "); printVertexList(x);
+	printVerbose("--- _bk\n");
+	printVerbose("\tr: "); printVertexList(r);
+	printVerbose("\tp: "); printVertexList(p);
+	printVerbose("\tx: "); printVertexList(x);
 
 	if (p == emptyList() && x == emptyList()){
+		/*insertSortedClique(listCopy(r));*/
 		maxCliqueSet = insertHere2(maxCliqueSet, listCopy(r));
 	}
 
@@ -354,26 +373,24 @@ void _bk(node_L *r, node_L *p, node_L *x){
 	node_L *rORv, *pANDnv, *xANDnv;
 	while(p){
 		v = (t_vertex*)p->data;
-		printf("<--v ");
+		printVerbose("<--v ");
 
-		printf("\tnv: "); printAdjList(edgesOf(v));
+		printVerbose("\tnv: "); printAdjList(edgesOf(v));
 
 		rORv = insertHere2(listCopy(r), v);
 		pANDnv = listIntersection(p, edgesOf(v));
 		xANDnv = listIntersection(x, edgesOf(v));
 
-		printf("\t rORv: "); printVertexList(rORv);
-		printf("\t pANDnv: "); printVertexList(pANDnv);
-		printf("\t xANDnv: "); printVertexList(xANDnv);
+		printVerbose("\t rORv: "); printVertexList(rORv);
+		printVerbose("\t pANDnv: "); printVertexList(pANDnv);
+		printVerbose("\t xANDnv: "); printVertexList(xANDnv);
 
 		_bk(rORv, pANDnv, xANDnv);
 
 		p = listRemove(p, v);
 		x = insertHere2(x, v);
 
-		p = p->next;
-
-		printf("v-->");
+		printVerbose("v-->");
 	}
 }
 
@@ -409,7 +426,7 @@ int main (int argc, const char *argv[]){
 
 	node_L *alunoGrau = AlunoSortedList();
 	prettyPrintVertexList(alunoGrau);
-	destroyList(alunoGrau);
+	/*destroyList(alunoGrau);*/
 
 	/*p = gVertexList(studentGraph);*/
 	/*printVertexList(alunoGrau);*/
