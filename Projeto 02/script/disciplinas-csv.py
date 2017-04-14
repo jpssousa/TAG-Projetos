@@ -1,13 +1,13 @@
 #  -*- coding: utf-8 -*-
-#    @package: test.py
+#    @package: disciplinas-csv.py
 #     @author: Cristian C.
-#	
+#	 @version: 0.1
 #
 from mwebcrawler import Cursos, Disciplina as mwDisciplina, Nivel
 import json
 import csv
 
-idConversionEnabled = True #and False
+idConversionEnabled = True and False
 
 verboseEnabled = True #and False
 def printVerbose(str):
@@ -34,6 +34,7 @@ class Main():
 	fluxoFileName = 'cic_fluxo.csv'
 	curriculoFileName = 'cic_curriculo.txt'
 
+	@staticmethod
 	def curriculoCrawler(opcao='1856'): #Ciência da Comp.
 		try:
 			outFile = open(Main.fluxoFileName, 'w', newline='') #py2.7 needs to open as wb (http://stackoverflow.com/a/3348664)
@@ -43,7 +44,7 @@ class Main():
 
 		curriculo = Cursos.curriculo(opcao, nivel=Nivel.GRADUACAO, verbose=False)
 
-		#v0.1 - caso base onde somente disciplinas obrigatorias são consideradas
+		#caso base onde somente disciplinas obrigatorias são consideradas
 		obg = curriculo['obrigatórias']
 		if (len(obg) == 0):
 			print('(E) Falha ao exportar disciplinas. Verifique o código do curso ({0})'\
@@ -77,7 +78,7 @@ class Main():
 			cod_toID[cod] = idx
 			idx += 1
 
-		#v0.1 - Export to csv
+		#Export to csv
 		csvWriter = csv.writer(outFile, dialect='excel')
 
 		csvWriter.writerow(['CODIGO (Cod)', 'NOME (N)', 'CREDITOS (Cr)', 'FATOR (f)', 'REQUISITOS...'])
@@ -93,11 +94,12 @@ class Main():
 					except KeyError: #semantically this should not happen but just in case
 						req.append(-1)
 
-			csvWriter.writerow([disc.codigo, disc.nome, disc.creditos, disc.fator] + req)
+			csvWriter.writerow([disc.codigo, disc.nome, disc.creditos, ''] + req)
 
 		outFile.close()
 		return True
 
+	@staticmethod
 	def test_curriculoCrawler():
 		opcao = '1856' # Ciência da Comp.
 		curriculo = Cursos.curriculo(opcao, nivel=Nivel.GRADUACAO, verbose=False)
@@ -108,7 +110,8 @@ class Main():
 		outFile.write(jsonOutput)
 		outFile.close()
 
-	def fluxoCrawler():
+	@staticmethod
+	def test_fluxoCrawler():
 		opcao = '1856' # Ciência da Comp.
 		fluxo = Cursos.fluxo(opcao, nivel=Nivel.GRADUACAO, verbose=False)
 
