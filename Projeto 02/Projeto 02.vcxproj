@@ -78,12 +78,6 @@
     <RemoteCleanCommandLine>cd  $(RemoteRootDir)/$(ProjectName)/ &amp;&amp; make limpa</RemoteCleanCommandLine>
   </PropertyGroup>
   <ItemGroup>
-    <ClInclude Include="resource.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="Projeto 02.rc" />
-  </ItemGroup>
-  <ItemGroup>
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
