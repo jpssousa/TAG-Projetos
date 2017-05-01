@@ -8,12 +8,13 @@
 using namespace std;
 
 #define IN_FILE			"disciplinas-tag-2017-1.csv"
+#define IN_FILE_FLUXO	"fluxo-tag-2017-1.csv"
 #define APP_VERSION		0.1
-#define APP_NAME		"MatriculaWeb CPM"
+#define APP_NAME		"MatriculaWeb Facil"
 #define FATAL_ERR		-1
 
 
-bool verboseEnabled = true; //and false;
+bool verboseEnabled = false;
 void printVerbose(string str) {
 	if (verboseEnabled)
 		cout << str << endl;
@@ -29,13 +30,21 @@ map<string, float> factorMap = {
 class Disciplina {
 	public:
 		string	cod;
+		string	nome;
 		float	peso;
 
-		Disciplina(string cod, float peso) {
+		Disciplina(string cod, string nome, float peso) {
 			this->cod = cod;
+			this->nome = nome;
 			this->peso = peso;
 		}
+
+		string tostring();
 };
+
+string Disciplina::tostring() {
+	return cod + " - " + nome;
+}
 
 class fluxoDisciplina {
 	int			numElementos;
@@ -78,6 +87,8 @@ class fluxoDisciplina {
 		int			getElementCount();
 		void		clone(fluxoDisciplina &dest);
 		bool		hasPreRequisitos(int id);
+		void		getEdgesFrom(int elemID, list<int> &result);
+		void		getDependencias(int elemID, list<int> &result);
 };
 
 bool fluxoDisciplina::addEdge(int a, int b) {
@@ -102,7 +113,7 @@ bool fluxoDisciplina::removeEdge(int a, int b) {
 
 Disciplina *fluxoDisciplina::getElement(int id) {
 	if (! (0 <= id && id < numElementos)) {
-		throw invalid_argument(string(__func__) + " id(" + to_string(id) + ") is out of range [0," + to_string(numElementos) + "]");
+		throw invalid_argument(string(__func__) + " id(" + to_string(id) + ") is out of range [0," + to_string(numElementos) + ")");
 	}
 
 	return vertices[id];
@@ -110,7 +121,7 @@ Disciplina *fluxoDisciplina::getElement(int id) {
 
 void fluxoDisciplina::setElement(int id, Disciplina *d) {
 	if (!(0 <= id && id < numElementos)) {
-		throw invalid_argument(string(__func__) + " id(" + to_string(id) + ") is out of range [0," + to_string(numElementos) + "]");
+		throw invalid_argument(string(__func__) + " id(" + to_string(id) + ") is out of range [0," + to_string(numElementos) + ")");
 	}
 
 	vertices[id] = d;
@@ -134,14 +145,60 @@ void fluxoDisciplina::clone(fluxoDisciplina &dest) {
 
 	/*vertex copy routine*/
 	//TODO: this part we should clone also each Disciplina element to avoid the dest have dead pointers if 'this' is deleted
+	Disciplina *cur;
 	for (int i = 0; i < this->numElementos; i++) {
-		dest.vertices[i] = this->vertices[i];
+		cur = this->vertices[i];
+		dest.vertices[i] = new Disciplina(cur->cod, cur->nome, cur->peso);
 	}
 }
 
 bool fluxoDisciplina::hasPreRequisitos(int id) {
+	int *requisitosArray;
+
+	requisitosArray = matrizAdjacencia[id];
+	for (int idx = 0; idx < numElementos; idx++) {
+		if (requisitosArray[idx] == 1) {
+			return true;
+		}
+	}
 	return false;
 }
+
+void fluxoDisciplina::getEdgesFrom(int elemID, list<int> &result) {
+	if (!(0 <= elemID && elemID < numElementos)) {
+		throw invalid_argument(string(__func__) + " id(" + to_string(elemID) + ") is out of range [0," + to_string(numElementos) + ")");
+	}
+
+	for (int destID = 0; destID < numElementos; destID++) {
+		if (matrizAdjacencia[elemID][destID] == 1) {
+			result.push_back(destID);
+		}
+	}
+}
+
+void fluxoDisciplina::getDependencias(int elemID, list<int> &result) {
+	if (!(0 <= elemID && elemID < numElementos)) {
+		throw invalid_argument(string(__func__) + " id(" + to_string(elemID) + ") is out of range [0," + to_string(numElementos) + ")");
+	}
+
+	for (int cur = 0; cur < numElementos; cur++) {
+		if (matrizAdjacencia[cur][elemID] == 1) {
+			result.push_back(cur);
+		}
+	}
+
+}
+
+class PathNode {
+	public:
+		int weight;
+		int dID;
+
+		PathNode(int weight, int dID) {
+			this->weight = weight;
+			this->dID = dID;
+		}
+};
 
 class disciplinaScheduler {
 	int courseID;
@@ -151,10 +208,13 @@ class disciplinaScheduler {
 		disciplinaScheduler(int courseID) {
 			this->courseID = courseID;
 		}
-	int readSemestreDataFromFile(string fileName);
-	bool toLinearSequence(fluxoDisciplina &container, list<Disciplina*> &ordedList);
+	int		readSemestreDataFromFile(string fileName);
+	bool	toLinearSequence(fluxoDisciplina &container, list<int> &dest);
+	void	printList(fluxoDisciplina &container, list<int> l);
+	void	getCriticalPath(fluxoDisciplina &source, list<int> &path, list<PathNode*> &dest);
 	private:
-		void getSortedVerticesList(fluxoDisciplina &source, list<Disciplina*> &dest);
+		void	getSortedVerticesList(fluxoDisciplina &source, list<int> &dest);
+		void	insertSortedVertex(fluxoDisciplina &source, list<int> &dest, int elemID);
 };
 
 int disciplinaScheduler::readSemestreDataFromFile(string fileName) {
@@ -199,50 +259,142 @@ int disciplinaScheduler::readSemestreDataFromFile(string fileName) {
 	return 0;
 }
 
-bool disciplinaScheduler::toLinearSequence(fluxoDisciplina &container, list<Disciplina*> &ordedList) {
+void disciplinaScheduler::printList(fluxoDisciplina &container, list<int> l) {
+	list<int>::iterator it;
+	string line;
 
+	for (it = l.begin(); it != l.end(); it++) {
+		line += container.getElement(*it)->cod + ", ";
+	}
+	cout << line << endl;
+}
+
+bool disciplinaScheduler::toLinearSequence(fluxoDisciplina &container, list<int> &dest) {
+	list<int> s;
 	fluxoDisciplina instance(container.getElementCount());
-	container.clone(instance);
 
-	list<Disciplina*> s;
+	container.clone(instance);
 	this->getSortedVerticesList(instance, s);
 
-	int p; cin >> p;
-
-	list<Disciplina*>::iterator it;
-	printVerbose("(I)::" + string(__func__) + " s result:"); string line("");
-	for (it = s.begin(); it != s.end(); it++) {
-		line += (*it)->cod + ", ";
+	printVerbose("(I)::" + string(__func__) + " Initializating Topologic Sorting");
+	printVerbose("(I)::" + string(__func__) + " Input S:");
+	if (verboseEnabled) {
+		printList(instance, s);
 	}
-	printVerbose(line);
 
+	list<int>::iterator it;
+	int cur; list<int> adjList;
+	while (! s.empty()) {
+		cur = s.front(); s.pop_front();
+		dest.push_back(cur);
 
+		instance.getDependencias(cur, adjList);
+		for (list<int>::iterator it = adjList.begin(); it != adjList.end(); it++) {
+			instance.removeEdge(*it, cur);
+			if (! instance.hasPreRequisitos(*it)) {
+				insertSortedVertex(instance, s, *it);
+			}
+		}
+
+		adjList.clear();
+	}
+
+	printVerbose("(I)::" + string(__func__) + " Output L:");
+	if (verboseEnabled) {
+		printList(instance, dest);
+	}
 
 	return true;
 }
 
-void disciplinaScheduler::getSortedVerticesList(fluxoDisciplina &source, list<Disciplina*> &dest) {
+void disciplinaScheduler::insertSortedVertex(fluxoDisciplina &source, list<int> &dest, int elemID) {
+	Disciplina *cur;
+	list<int>::iterator it;
+
+	cur = source.getElement(elemID);
+
+	for (it = dest.begin(); it != dest.end(); it++) {
+		if (semestreOF[cur->cod] < semestreOF[source.getElement(*it)->cod]) {
+			dest.insert(it, elemID); break;
+		}
+	}
+	if (it == dest.end()) {
+		dest.push_back(elemID);
+	}
+}
+
+void disciplinaScheduler::getSortedVerticesList(fluxoDisciplina &source, list<int> &dest) {
 	int max = source.getElementCount();
 	Disciplina *cur;
-	list<Disciplina*>::iterator it;
+	list<int>::iterator it;
 
 
 	for (int i = 0; i < max; i++) {
-		if (source.hasPreRequisitos(i)) { // TODO: implement check for pre-requisitos
+		if (source.hasPreRequisitos(i)) {
 			continue;
 		}
 		cur = source.getElement(i);
 
 		for (it = dest.begin(); it != dest.end(); it++) {
-			if (semestreOF[cur->cod] < semestreOF[(*it)->cod]) {
-				dest.insert(it, cur); break;
+			if (semestreOF[cur->cod] < semestreOF[source.getElement(*it)->cod]) {
+				dest.insert(it, i); break;
 			}
 		}
 		if (it == dest.end()) {
-			dest.push_back(cur);
+			dest.push_back(i);
 		}
 	}
 }
+
+void disciplinaScheduler::getCriticalPath(fluxoDisciplina &source, list<int> &path, list<PathNode*> &dest) {
+	Disciplina *cur;
+	list<int>::iterator it, cit;
+
+	map<int, int> cp_weight;
+	map<int, int> cp_previous;
+	int cp_max_weight_id = -1; cp_weight[cp_max_weight_id] = 0;
+
+	for (it = path.begin(); it != path.end(); it++) {
+		if (verboseEnabled) {
+			cout << "it: " << source.getElement(*it)->cod << " - " + source.getElement(*it)->nome << endl;
+		}
+		cur = source.getElement(*it);
+		list<int> dependencias;
+		source.getEdgesFrom(*it, dependencias);
+
+		int elem_critico = -1;
+		for (cit = dependencias.begin(); cit != dependencias.end(); cit++) {
+			if (verboseEnabled) {
+				cout << "\tdID: " << source.getElement(*cit)->cod << " - " + source.getElement(*cit)->nome << endl;
+			}
+
+			if (cp_weight[*cit] > cp_weight[elem_critico]) {
+				elem_critico = *cit;
+			}
+		}
+
+		cp_weight[*it] = cur->peso + cp_weight[elem_critico];
+		cp_previous[*it] = elem_critico;
+
+		if (verboseEnabled) {
+			string cpp = cp_previous[*it] != -1 ? source.getElement(cp_previous[*it])->cod : "-1";
+			string ec = elem_critico != -1 ? source.getElement(elem_critico)->cod : "-1";
+			cout << "\teC: " << ec << "cpW: " << cp_weight[*it] << " cpP: " << cpp << endl;
+		}
+
+		if (cp_weight[*it] > cp_weight[cp_max_weight_id]) {
+			cp_max_weight_id = *it;
+		}
+	}
+
+	int cp_cur = cp_max_weight_id;
+	while (cp_cur != -1) {
+		dest.push_front(new PathNode(cp_weight[cp_cur], cp_cur));
+
+		cp_cur = cp_previous[cp_cur];
+	}
+}
+
 
 bool parseDisciplinasFile(ifstream *infile, fluxoDisciplina &container) {
 	string		line;
@@ -255,23 +407,26 @@ bool parseDisciplinasFile(ifstream *infile, fluxoDisciplina &container) {
 	match_results<string::const_iterator> match_itr; int idx = 0; int lineNumber = 1;
 	smatch::iterator it;
 
-	string cod, requisitosLine; int creditos; float peso;
+	string cod, nome, requisitosLine; int creditos; float peso;
 	printVerbose("(I) Reading elements from file (Codigo (ID) - Peso (P) - Requisitos (R))");
 	while (getline(*infile, line)) {
 		regex_match(line, match_itr, infoHandler);
 
 		if (match_itr.empty() || match_itr.size() < 6 || match_itr.str(4) == " ") {
-			cout << "(I) Ignorando linha " << lineNumber << endl; lineNumber++;
+			if (verboseEnabled) {
+				cout << "(I) Ignorando linha " << lineNumber << endl; lineNumber++;
+			}
 			continue;
 		}
 
 		cod = match_itr.str(1);
+		nome = match_itr.str(2);
 		creditos = stoi(match_itr.str(3)); /*can raise an invalid_argument execption*/
 		requisitosLine = match_itr.str(5);
 
 		peso = (float)creditos * factorMap[match_itr.str(4)];
 
-		container.setElement(idx, new Disciplina(cod, creditos));
+		container.setElement(idx, new Disciplina(cod, nome, creditos));
 
 		string reqList = "";
 		while ( regex_search(requisitosLine, match_itr, requisitosHandler) ) {
@@ -290,11 +445,42 @@ bool parseDisciplinasFile(ifstream *infile, fluxoDisciplina &container) {
 	return true;
 }
 
+void printRelatorio(fluxoDisciplina &fd, list<int> tp, list<PathNode*> cp) {
+	list<PathNode*>::iterator it;
+	list<int>::iterator dit;
+	int pos;
+
+	cout << "~! Ordenacao Topologica" << endl; pos = 0;
+	for (dit = tp.begin(); dit != tp.end(); dit++) {
+		cout << pos << ".\t" << fd.getElement(*dit)->tostring() << endl;
+
+		pos++;
+	}
+	cout << endl << endl;
+
+	cout << "~! Caminho Critico ~" << endl; pos = 0; PathNode *cur;
+	for (it = cp.begin(); it != cp.end(); it++) {
+		cur = *it; list<int> dependencias;
+
+		cout << pos << ". " << fd.getElement(cur->dID)->tostring() << endl;
+
+		fd.getEdgesFrom(cur->dID, dependencias);
+		for (dit = dependencias.begin(); dit != dependencias.end(); dit++) {
+			cout << "\tPre-Req: " << fd.getElement(*dit)->tostring() << endl;
+		}
+
+		pos++;
+	}
+}
+
 int main()
 {
 	cout << APP_NAME << " v" << APP_VERSION << endl;
 
 	ifstream fileHandler(IN_FILE);
+
+	cout << "(I) A carregar dados de " << IN_FILE << ", " << IN_FILE_FLUXO << " ..." << endl;
+	cout << "\t Curso: 1856 - Ciencia da Computacao\n" << endl;
 
 	if (!fileHandler) {
 		cout << "Nao foi possivel abrir arquivo de entrada " << IN_FILE << ". Abortando operacao." << endl;
@@ -304,11 +490,14 @@ int main()
 	fluxoDisciplina fp(35); /*we already know how many elements we're going work with, but it would be a better if this is told on the header*/
 	bool parseSucess = parseDisciplinasFile(&fileHandler, fp);
 
+
+	list<int> topological_path; list<PathNode*> critical_path;
 	disciplinaScheduler dps(1856);
-	dps.readSemestreDataFromFile("fluxo-tag-2017-1.csv");
-	list<Disciplina*>path;
-	dps.toLinearSequence(fp, path);
-	
+	dps.readSemestreDataFromFile(IN_FILE_FLUXO);
+	dps.toLinearSequence(fp, topological_path);
+	dps.getCriticalPath(fp, topological_path, critical_path);
+
+	printRelatorio(fp, topological_path, critical_path);
 
     return 0;
 }
