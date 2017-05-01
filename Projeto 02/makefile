@@ -2,7 +2,7 @@ CC = g++
 CCFLAGS = -std=c++11
 #CCLIBS = 
 
-PROG_NAME = mwguru
+PROG_NAME = mwfacil
 REPO_VER = $(shell git rev-parse --short HEAD)
 MAIN_RECIPE = programa limpa
 

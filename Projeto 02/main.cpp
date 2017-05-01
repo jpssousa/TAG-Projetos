@@ -1,3 +1,30 @@
+/*
+2017-1
+Teoria e Aplicação de Grafos - Turma A
+Prof. Díbio Borges
+
+Aluno: Cristiano Cardoso 		15/0058349
+Aluno: João Pedro Silva Sousa	15/0038381
+
+0. Requisitos
+cristian@Jasmine-VirtualBox:/media/sf_TAG-projetos$ gcc --version
+gcc (Ubuntu 4.9.4-2ubuntu1~14.04.1) 4.9.4
+
+1. Compilação
+	- Vá ate o diretorio de onde foi extraido o programa e entre com o comando
+		$ make makefile
+	- Um executável entitulado mwfacil deve ser gerado nesta pasta
+2. Execução
+	- Entre no terminal
+		$ ./mwfacil
+	- Caos queira salvar a saida em um arquivo faça
+		$ ./mwfacil > saida.txt
+3. Saída
+	- A saída consiste em duas partes: uma contendo a ordenação topológica (OT), e a outra, o caminho crítico (CP)
+		* A OT é elaborada considerando o semestre da disciplina. Ou seja, a disciplina do primeiro semestre deverá ser feita antes de uma situada no terceiro semeste - logo, ficará na frente.
+		É impressa uma lista de prioridade contendo as disciplinas. Isto é, a disciplina devem ser feitas na ordem que aparecem na tela. Exemplo: 1. APC -> 2. ISC -> 3. C1 -> ...
+		* O CP é elaborado a partir da ordenação topológica. Ela considera os pesos das disciplinas e mostra qual é a cadeia mais trabalhosa do curso - isto é: onde há a maior série de matérias que dependem uma das outras e sejam consideradas difíceis (possuem pesos maiores). Caso o aluno não as priorize, haverá maior chance de o tempo de curso atrasar.
+*/
 #include <iostream>
 #include <fstream>
 #include <map>
@@ -13,20 +40,28 @@ using namespace std;
 #define APP_NAME		"MatriculaWeb Facil"
 #define FATAL_ERR		-1
 
-
+/*
+Caso esta variável seja verdadeira, todos os detalhes referentes aos algoritmos executados serão mostrados
+É recomendado redirecionar a saida (stdout) para um arquivo quando esta estiver habilitada
+*/
 bool verboseEnabled = false;
 void printVerbose(string str) {
 	if (verboseEnabled)
 		cout << str << endl;
 }
 
-
+/*
+Traduz a equivalência entre F(ácil), M(édio) e D(ifícil) para um fator de multiplicação f. Isto serve para evitar com que seja necessário ficar digitando os valores decimais na planilha e ter chance de errar.
+*/
 map<string, float> factorMap = {
 	make_pair("F", 0.5),
 	make_pair("M", 1.0),
 	make_pair("D", 1.5)
 };
 
+/*
+Elemento nó do grafo: possui os atributos básicos de uma disciplina
+*/
 class Disciplina {
 	public:
 		string	cod;
@@ -46,13 +81,21 @@ string Disciplina::tostring() {
 	return cod + " - " + nome;
 }
 
-class fluxoDisciplina {
-	int			numElementos;
-	int			**matrizAdjacencia;
-	Disciplina	**vertices;
 
+/*
+Grafo contendo as disciplinas. O seu nome se deve porque estas disciplinas são retiradas do fluxo da disciplina.
+Seu método para armazenar as arestas é a matriz de adjacência.
+Todo vértice (Disciplina) recebe um inteiro positivo que o identifica. Assim evita-se ter problemas com ponteiros.
+Devido a isto, o número de vértices deve ser informado na hora de instanciar o grafo.
+
+Caso uma disciplina A tenha pré-requisito B, uma aresta de A para B é criada ou matrizAdjancencia[A][B] = 1
+*/
+class fluxoDisciplina {
 	private:
-		int		*elementPool;
+		int			numElementos;
+		int			**matrizAdjacencia;
+		Disciplina	**vertices;
+		int		*elementPool; /*pool of cute elements: they can be destroyed all at once and malloc won't slow down our furious application*/
 
 	public:
 		fluxoDisciplina(int numElementos) {
@@ -80,6 +123,7 @@ class fluxoDisciplina {
 				delete vertices[idx];
 			}
 		}
+
 		bool		addEdge(int a, int b);
 		bool		removeEdge(int a, int b);
 		Disciplina	*getElement(int id);
@@ -111,6 +155,10 @@ bool fluxoDisciplina::removeEdge(int a, int b) {
 	return true;
 }
 
+/*
+Retorna um ponteiro para disciplina dado um ID
+O elemento é retirado do repositório (pool) de vértices
+*/
 Disciplina *fluxoDisciplina::getElement(int id) {
 	if (! (0 <= id && id < numElementos)) {
 		throw invalid_argument(string(__func__) + " id(" + to_string(id) + ") is out of range [0," + to_string(numElementos) + ")");
@@ -119,6 +167,9 @@ Disciplina *fluxoDisciplina::getElement(int id) {
 	return vertices[id];
 }
 
+/*
+Substitui o objeto armazenado dado um ID
+*/
 void fluxoDisciplina::setElement(int id, Disciplina *d) {
 	if (!(0 <= id && id < numElementos)) {
 		throw invalid_argument(string(__func__) + " id(" + to_string(id) + ") is out of range [0," + to_string(numElementos) + ")");
@@ -127,10 +178,19 @@ void fluxoDisciplina::setElement(int id, Disciplina *d) {
 	vertices[id] = d;
 }
 
+/*
+Retorna o número de vértices do grafo
+*/
 int fluxoDisciplina::getElementCount() {
 	return numElementos;
 }
 
+/*
+Copia as informações de um grafo existente para um grafo recém criado.
+Isto inclui a matriz de adjacência e as informações com respeito as disciplinas
+O tamanho do grafo de destino deve ser >= ao de origem
+O grafo de origem pode ser excluido normalmente, pois de destino realizou uma cópia de todas suas informações.
+*/
 void fluxoDisciplina::clone(fluxoDisciplina &dest) {
 	if (this->numElementos > dest.numElementos) {
 		throw invalid_argument("destination element does not have enough space to clone source data.");
@@ -144,7 +204,6 @@ void fluxoDisciplina::clone(fluxoDisciplina &dest) {
 	}
 
 	/*vertex copy routine*/
-	//TODO: this part we should clone also each Disciplina element to avoid the dest have dead pointers if 'this' is deleted
 	Disciplina *cur;
 	for (int i = 0; i < this->numElementos; i++) {
 		cur = this->vertices[i];
@@ -152,6 +211,9 @@ void fluxoDisciplina::clone(fluxoDisciplina &dest) {
 	}
 }
 
+/*
+Verifica se uma dada disciplina possui pré-requisitos
+*/
 bool fluxoDisciplina::hasPreRequisitos(int id) {
 	int *requisitosArray;
 
@@ -164,6 +226,9 @@ bool fluxoDisciplina::hasPreRequisitos(int id) {
 	return false;
 }
 
+/*
+Verifica quais são os pré-requisitos de uma dada disciplina
+*/
 void fluxoDisciplina::getEdgesFrom(int elemID, list<int> &result) {
 	if (!(0 <= elemID && elemID < numElementos)) {
 		throw invalid_argument(string(__func__) + " id(" + to_string(elemID) + ") is out of range [0," + to_string(numElementos) + ")");
@@ -176,6 +241,9 @@ void fluxoDisciplina::getEdgesFrom(int elemID, list<int> &result) {
 	}
 }
 
+/*
+Verifica quais são as disciplinas que a dada disciplina é pré-requisito
+*/
 void fluxoDisciplina::getDependencias(int elemID, list<int> &result) {
 	if (!(0 <= elemID && elemID < numElementos)) {
 		throw invalid_argument(string(__func__) + " id(" + to_string(elemID) + ") is out of range [0," + to_string(numElementos) + ")");
@@ -189,6 +257,7 @@ void fluxoDisciplina::getDependencias(int elemID, list<int> &result) {
 
 }
 
+
 class PathNode {
 	public:
 		int weight;
@@ -200,9 +269,15 @@ class PathNode {
 		}
 };
 
+/*
+Classe que contém toda a lógica de gerar os caminhos críticos e a ordenação topológica
+Seu nome se deve porque esta funciona como se fosse um agendador de tarefas, onde nele é possivel ver quais tarefas (disciplinas) devem ser feito em ordem, e quais delas são mais trabalhosas
+O scheduler está intriscamente ligado ao curso, porque com esta informação é possivel saber quais disciplinas pertencem
+a qual semestre (também por questões de desenvolvimento).
+*/
 class disciplinaScheduler {
 	int courseID;
-	map<string, unsigned> semestreOF;
+	map<string, unsigned> semestreOF; /*from an courseID i can know what semestrer it is from*/
 
 	public:
 		disciplinaScheduler(int courseID) {
@@ -210,13 +285,16 @@ class disciplinaScheduler {
 		}
 	int		readSemestreDataFromFile(string fileName);
 	bool	toLinearSequence(fluxoDisciplina &container, list<int> &dest);
-	void	printList(fluxoDisciplina &container, list<int> l);
 	void	getCriticalPath(fluxoDisciplina &source, list<int> &path, list<PathNode*> &dest);
 	private:
+		void	printList(fluxoDisciplina &container, list<int> l);
 		void	getSortedVerticesList(fluxoDisciplina &source, list<int> &dest);
 		void	insertSortedVertex(fluxoDisciplina &source, list<int> &dest, int elemID);
 };
 
+/*
+Recebe um arquivo contendo as disciplinas discriminadas por semestre a fim de preencher o map semestreOF
+*/
 int disciplinaScheduler::readSemestreDataFromFile(string fileName) {
 	string		line;
 	ifstream	inFile(fileName);
@@ -259,6 +337,9 @@ int disciplinaScheduler::readSemestreDataFromFile(string fileName) {
 	return 0;
 }
 
+/*
+Função de Debug: dada uma lista de disciplinaID, esta é impressa na tela onde cada item é seu código
+*/
 void disciplinaScheduler::printList(fluxoDisciplina &container, list<int> l) {
 	list<int>::iterator it;
 	string line;
@@ -269,6 +350,11 @@ void disciplinaScheduler::printList(fluxoDisciplina &container, list<int> l) {
 	cout << line << endl;
 }
 
+/*
+Realiza a ordenação topológica
+Fonte: https://en.wikipedia.org/wiki/Topological_sorting#Kahn.27s_algorithm
+Obs: O conjunto S é implementado como sendo uma lista de prioridade, onde a disciplina que é de um semestre anterior possui prioridade
+*/
 bool disciplinaScheduler::toLinearSequence(fluxoDisciplina &container, list<int> &dest) {
 	list<int> s;
 	fluxoDisciplina instance(container.getElementCount());
@@ -307,6 +393,10 @@ bool disciplinaScheduler::toLinearSequence(fluxoDisciplina &container, list<int>
 	return true;
 }
 
+/*
+Algoritmo de Kahn
+Raliza a inserção de uma disciplinaID em um conjunto S levando em conta a prioridade
+*/
 void disciplinaScheduler::insertSortedVertex(fluxoDisciplina &source, list<int> &dest, int elemID) {
 	Disciplina *cur;
 	list<int>::iterator it;
@@ -323,6 +413,10 @@ void disciplinaScheduler::insertSortedVertex(fluxoDisciplina &source, list<int> 
 	}
 }
 
+/*
+Algoritmo de Kahn
+Obtem um conjunto S de todas as disciplinas que não possuem pré-requisitos, levando em consideração a prioridade
+*/
 void disciplinaScheduler::getSortedVerticesList(fluxoDisciplina &source, list<int> &dest) {
 	int max = source.getElementCount();
 	Disciplina *cur;
@@ -346,6 +440,10 @@ void disciplinaScheduler::getSortedVerticesList(fluxoDisciplina &source, list<in
 	}
 }
 
+/*
+Obtém o caminho crítico
+Fonte: https://en.m.wikipedia.org/wiki/Longest_path_problem#Acyclic_graphs_and_critical_paths
+*/
 void disciplinaScheduler::getCriticalPath(fluxoDisciplina &source, list<int> &path, list<PathNode*> &dest) {
 	Disciplina *cur;
 	list<int>::iterator it, cit;
@@ -395,7 +493,9 @@ void disciplinaScheduler::getCriticalPath(fluxoDisciplina &source, list<int> &pa
 	}
 }
 
-
+/*
+Lê o arquivo contendo disciplinas e seus pesos
+*/
 bool parseDisciplinasFile(ifstream *infile, fluxoDisciplina &container) {
 	string		line;
 	const char	infoPattern[] = "(\\d{6}),([\\w ]+),(\\d+),([FMD ])(,[\\d, ]*)";
@@ -445,12 +545,15 @@ bool parseDisciplinasFile(ifstream *infile, fluxoDisciplina &container) {
 	return true;
 }
 
+/*
+Imprime um relatório
+*/
 void printRelatorio(fluxoDisciplina &fd, list<int> tp, list<PathNode*> cp) {
 	list<PathNode*>::iterator it;
 	list<int>::iterator dit;
 	int pos;
 
-	cout << "~! Ordenacao Topologica" << endl; pos = 0;
+	cout << "~! Ordenacao Topologica" << endl; pos = 1;
 	for (dit = tp.begin(); dit != tp.end(); dit++) {
 		cout << pos << ".\t" << fd.getElement(*dit)->tostring() << endl;
 
@@ -458,7 +561,7 @@ void printRelatorio(fluxoDisciplina &fd, list<int> tp, list<PathNode*> cp) {
 	}
 	cout << endl << endl;
 
-	cout << "~! Caminho Critico ~" << endl; pos = 0; PathNode *cur;
+	cout << "~! Caminho Critico ~" << endl; pos = 1; PathNode *cur;
 	for (it = cp.begin(); it != cp.end(); it++) {
 		cur = *it; list<int> dependencias;
 
@@ -473,6 +576,9 @@ void printRelatorio(fluxoDisciplina &fd, list<int> tp, list<PathNode*> cp) {
 	}
 }
 
+/*
+Função principal
+*/
 int main()
 {
 	cout << APP_NAME << " v" << APP_VERSION << endl;
