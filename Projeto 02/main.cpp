@@ -34,16 +34,22 @@ gcc (Ubuntu 4.9.4-2ubuntu1~14.04.1) 4.9.4
 
 using namespace std;
 
+/* DEFINIÇÕES */
+
 #define IN_FILE			"disciplinas-tag-2017-1.csv"
 #define IN_FILE_FLUXO	"fluxo-tag-2017-1.csv"
 #define APP_VERSION		0.1
 #define APP_NAME		"MatriculaWeb Facil"
+#define N_SUBJECTS		35
 #define FATAL_ERR		-1
 
 /*
 Caso esta variável seja verdadeira, todos os detalhes referentes aos algoritmos executados serão mostrados
 É recomendado redirecionar a saida (stdout) para um arquivo quando esta estiver habilitada
 */
+
+/* VARIÁVEIS GLOBAIS */
+
 bool verboseEnabled = false;
 void printVerbose(string str) {
 	if (verboseEnabled)
@@ -59,14 +65,16 @@ map<string, float> factorMap = {
 	make_pair("D", 1.5)
 };
 
+/* CLASSES */
+
 /*
 Elemento nó do grafo: possui os atributos básicos de uma disciplina
 */
 class Disciplina {
 	public:
-		string	cod;
-		string	nome;
-		float	peso;
+		string	cod; /* código de identificação da disciplina */
+		string	nome; /* nome da disciplina */
+		float	peso; /* peso da disciplina, calculado pela multiplicação entre os créditos da disciplina e o fator de dificuldade */
 
 		Disciplina(string cod, string nome, float peso) {
 			this->cod = cod;
@@ -99,7 +107,7 @@ class fluxoDisciplina {
 
 	public:
 		fluxoDisciplina(int numElementos) {
-			if (numElementos < 0)
+			if (numElementos < 0) /* O grafo deve ter pelo menos um elemento (vértice) */
 				throw invalid_argument("numElementos must be positive");
 
 			matrizAdjacencia = (int**)malloc(numElementos * sizeof(int*));
@@ -135,6 +143,50 @@ class fluxoDisciplina {
 		void		getDependencias(int elemID, list<int> &result);
 };
 
+/*
+Classe elemento do caminho crítico
+*/
+class PathNode {
+	public:
+		int weight; /* Variável que armazena o peso de uma aresta no caminho crítico */
+		int dID; /* Código de identificação da disciplina */
+
+		PathNode(int weight, int dID) {
+			this->weight = weight;
+			this->dID = dID;
+		}
+};
+
+/*
+Classe que contém toda a lógica de gerar os caminhos críticos e a ordenação topológica
+Seu nome se deve porque esta funciona como se fosse um agendador de tarefas, onde nele é possivel ver quais tarefas (disciplinas) devem ser feito em ordem, e quais delas são mais trabalhosas
+O scheduler está intriscamente ligado ao curso, porque com esta informação é possivel saber quais disciplinas pertencem
+a qual semestre (também por questões de desenvolvimento).
+*/
+class disciplinaScheduler {
+	int courseID;
+	map<string, unsigned> semestreOF; /*from an courseID i can know what semestrer it is from*/
+
+	public:
+		disciplinaScheduler(int courseID) {
+			this->courseID = courseID;
+		}
+	int		readSemestreDataFromFile(string fileName);
+	bool	toLinearSequence(fluxoDisciplina &container, list<int> &dest);
+	void	getCriticalPath(fluxoDisciplina &source, list<int> &path, list<PathNode*> &dest);
+	private:
+		void	printList(fluxoDisciplina &container, list<int> l);
+		void	getSortedVerticesList(fluxoDisciplina &source, list<int> &dest);
+		void	insertSortedVertex(fluxoDisciplina &source, list<int> &dest, int elemID);
+};
+
+
+/* MÉTODOS */
+
+/*
+Adciona aresta entre dois vértices, como o grafo é direcionado, uma aresta de A para B é diferente de uma
+aresta de B para A
+*/
 bool fluxoDisciplina::addEdge(int a, int b) {
 	if ( !(0 <= a && a < numElementos) || !(0 <= b && b < numElementos) ){
 		return false;
@@ -257,40 +309,6 @@ void fluxoDisciplina::getDependencias(int elemID, list<int> &result) {
 
 }
 
-
-class PathNode {
-	public:
-		int weight;
-		int dID;
-
-		PathNode(int weight, int dID) {
-			this->weight = weight;
-			this->dID = dID;
-		}
-};
-
-/*
-Classe que contém toda a lógica de gerar os caminhos críticos e a ordenação topológica
-Seu nome se deve porque esta funciona como se fosse um agendador de tarefas, onde nele é possivel ver quais tarefas (disciplinas) devem ser feito em ordem, e quais delas são mais trabalhosas
-O scheduler está intriscamente ligado ao curso, porque com esta informação é possivel saber quais disciplinas pertencem
-a qual semestre (também por questões de desenvolvimento).
-*/
-class disciplinaScheduler {
-	int courseID;
-	map<string, unsigned> semestreOF; /*from an courseID i can know what semestrer it is from*/
-
-	public:
-		disciplinaScheduler(int courseID) {
-			this->courseID = courseID;
-		}
-	int		readSemestreDataFromFile(string fileName);
-	bool	toLinearSequence(fluxoDisciplina &container, list<int> &dest);
-	void	getCriticalPath(fluxoDisciplina &source, list<int> &path, list<PathNode*> &dest);
-	private:
-		void	printList(fluxoDisciplina &container, list<int> l);
-		void	getSortedVerticesList(fluxoDisciplina &source, list<int> &dest);
-		void	insertSortedVertex(fluxoDisciplina &source, list<int> &dest, int elemID);
-};
 
 /*
 Recebe um arquivo contendo as disciplinas discriminadas por semestre a fim de preencher o map semestreOF
@@ -440,6 +458,7 @@ void disciplinaScheduler::getSortedVerticesList(fluxoDisciplina &source, list<in
 	}
 }
 
+
 /*
 Obtém o caminho crítico
 Fonte: https://en.m.wikipedia.org/wiki/Longest_path_problem#Acyclic_graphs_and_critical_paths
@@ -492,6 +511,8 @@ void disciplinaScheduler::getCriticalPath(fluxoDisciplina &source, list<int> &pa
 		cp_cur = cp_previous[cp_cur];
 	}
 }
+
+/* FUNÇÕES */
 
 /*
 Lê o arquivo contendo disciplinas e seus pesos
@@ -546,7 +567,9 @@ bool parseDisciplinasFile(ifstream *infile, fluxoDisciplina &container) {
 }
 
 /*
-Imprime um relatório
+Imprime um relatório contendo uma possível ordenação topológica do grafo e
+o maior caminho crítico calculado a partir da ordenação topológica, junto
+com os pré-requisitos de cada disciplina do caminho crítico.
 */
 void printRelatorio(fluxoDisciplina &fd, list<int> tp, list<PathNode*> cp) {
 	list<PathNode*>::iterator it;
@@ -593,7 +616,7 @@ int main()
 		return FATAL_ERR;
 	}
 
-	fluxoDisciplina fp(35); /*we already know how many elements we're going work with, but it would be a better if this is told on the header*/
+	fluxoDisciplina fp(N_SUBJECTS);
 	bool parseSucess = parseDisciplinasFile(&fileHandler, fp);
 
 
