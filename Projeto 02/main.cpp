@@ -24,6 +24,7 @@ gcc (Ubuntu 4.9.4-2ubuntu1~14.04.1) 4.9.4
 		* A OT é elaborada considerando o semestre da disciplina. Ou seja, a disciplina do primeiro semestre deverá ser feita antes de uma situada no terceiro semeste - logo, ficará na frente.
 		É impressa uma lista de prioridade contendo as disciplinas. Isto é, a disciplina devem ser feitas na ordem que aparecem na tela. Exemplo: 1. APC -> 2. ISC -> 3. C1 -> ...
 		* O CP é elaborado a partir da ordenação topológica. Ela considera os pesos das disciplinas e mostra qual é a cadeia mais trabalhosa do curso - isto é: onde há a maior série de matérias que dependem uma das outras e sejam consideradas difíceis (possuem pesos maiores). Caso o aluno não as priorize, haverá maior chance de o tempo de curso atrasar.
+		* O peso da disciplina é calculado usando a seguinte fórmula: P = Cr*f, onde Cr são os créditos e f é o fator de dificuldade associado a disciplina. Os valores discriminados de Cr e f podem ser verificados no arquivo disciplinas-tag-2017-1.csv. Recomenda-se um editor de planilhas como o LibreOffice Calc para visualiza-lo.
 */
 #include <iostream>
 #include <fstream>
@@ -86,7 +87,7 @@ class Disciplina {
 };
 
 string Disciplina::tostring() {
-	return cod + " - " + nome;
+	return cod + " - " + nome + " * " + to_string((int)peso);
 }
 
 
@@ -531,7 +532,7 @@ bool parseDisciplinasFile(ifstream *infile, fluxoDisciplina &container) {
 	string cod, nome, requisitosLine; int creditos; float peso;
 	printVerbose("(I) Reading elements from file (Codigo (ID) - Peso (P) - Requisitos (R))");
 	while (getline(*infile, line)) {
-		regex_match(line, match_itr, infoHandler);
+		regex_search(line, match_itr, infoHandler);
 
 		if (match_itr.empty() || match_itr.size() < 6 || match_itr.str(4) == " ") {
 			if (verboseEnabled) {
@@ -547,7 +548,7 @@ bool parseDisciplinasFile(ifstream *infile, fluxoDisciplina &container) {
 
 		peso = (float)creditos * factorMap[match_itr.str(4)];
 
-		container.setElement(idx, new Disciplina(cod, nome, creditos));
+		container.setElement(idx, new Disciplina(cod, nome, peso));
 
 		string reqList = "";
 		while ( regex_search(requisitosLine, match_itr, requisitosHandler) ) {
@@ -577,6 +578,7 @@ void printRelatorio(fluxoDisciplina &fd, list<int> tp, list<PathNode*> cp) {
 	int pos;
 
 	cout << "~! Ordenacao Topologica" << endl; pos = 1;
+	cout << "Posicao. Codigo - Nome * Peso" << endl;
 	for (dit = tp.begin(); dit != tp.end(); dit++) {
 		cout << pos << ".\t" << fd.getElement(*dit)->tostring() << endl;
 
@@ -585,6 +587,7 @@ void printRelatorio(fluxoDisciplina &fd, list<int> tp, list<PathNode*> cp) {
 	cout << endl << endl;
 
 	cout << "~! Caminho Critico ~" << endl; pos = 1; PathNode *cur;
+	cout << "Posicao. Codigo - Nome * Peso" << endl;
 	for (it = cp.begin(); it != cp.end(); it++) {
 		cur = *it; list<int> dependencias;
 
@@ -597,6 +600,9 @@ void printRelatorio(fluxoDisciplina &fd, list<int> tp, list<PathNode*> cp) {
 
 		pos++;
 	}
+	
+	cur = cp.back();
+	cout << "Peso total: " << cur->weight << endl;
 }
 
 /*
@@ -618,7 +624,6 @@ int main()
 
 	fluxoDisciplina fp(N_SUBJECTS);
 	bool parseSucess = parseDisciplinasFile(&fileHandler, fp);
-
 
 	list<int> topological_path; list<PathNode*> critical_path;
 	disciplinaScheduler dps(1856);
