@@ -19,7 +19,10 @@ gcc (Ubuntu 4.9.4-2ubuntu1~14.04.1) 4.9.4
 		$ ./mwfacil
 	- Caos queira salvar a saida em um arquivo faça
 		$ ./mwfacil > saida.txt
-3. Saída
+3. Entrada
+	- A entrada se constitui de dois arquivos csv: uma com as informações referentes às disciplinas e outro da relação entre disciplina e semestre da qual esta faz parte no fluxo. Lembrando que optativas não possuem posição no fluxo, portanto elas podem ser feitas logo quando seus pre-requisitos forem cumpridos.
+	- No arquivo disciplinas-tag-2017-1.csv, as disciplinas obrigatórias estão listadas da linha 2-36. Enquanto as optativas, 37-43.
+4. Saída
 	- A saída consiste em duas partes: uma contendo a ordenação topológica (OT), e a outra, o caminho crítico (CP)
 		* A OT é elaborada considerando o semestre da disciplina. Ou seja, a disciplina do primeiro semestre deverá ser feita antes de uma situada no terceiro semeste - logo, ficará na frente.
 		É impressa uma lista de prioridade contendo as disciplinas. Isto é, a disciplina devem ser feitas na ordem que aparecem na tela. Exemplo: 1. APC -> 2. ISC -> 3. C1 -> ...
@@ -41,7 +44,7 @@ using namespace std;
 #define IN_FILE_FLUXO	"fluxo-tag-2017-1.csv"
 #define APP_VERSION		0.1
 #define APP_NAME		"MatriculaWeb Facil"
-#define N_SUBJECTS		35
+#define N_SUBJECTS		42
 #define FATAL_ERR		-1
 
 /*

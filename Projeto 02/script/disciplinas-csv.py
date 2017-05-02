@@ -45,7 +45,7 @@ class Main():
 		curriculo = Cursos.curriculo(opcao, nivel=Nivel.GRADUACAO, verbose=False)
 
 		#caso base onde somente disciplinas obrigatorias são consideradas
-		obg = curriculo['obrigatórias']
+		obg = curriculo['optativas']
 		if (len(obg) == 0):
 			print('(E) Falha ao exportar disciplinas. Verifique o código do curso ({0})'\
 				' e/ou a conexao com a internet.'.format(opcao)\
