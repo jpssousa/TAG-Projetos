@@ -101,10 +101,12 @@ class School {
 
             // TODO: sad code below
             if (skill_a >= this->req_skills && skill_b >= this->req_skills) {
-                return false;
+                return (skill_a >= skill_b);
+                //return false;
             }
             if (skill_a < this->req_skills && skill_b < this->req_skills) {
-                return false;
+                return (skill_a <= skill_b);
+                //return false;
             }
             if (skill_a < this->req_skills && skill_b >= this->req_skills) {
                 return false;
@@ -133,7 +135,7 @@ int getFreeProfessor (Professor ** prof) {
             return i;
         }
     }
-    throw invalid_argument ("Non avaiable professors.");
+    //throw invalid_argument ("Non avaiable professors.");
     return ERROR;
 }
 
@@ -167,7 +169,7 @@ void stableMatching (Professor ** profArray, School ** schArray) {
         }
         else {
             for (int i = 0; i < MAX_PROFS; i++) {
-                if (s_cur->prefers (p_cur, profArray[s_cur->linked_to[i]])) {
+                if (s_cur->prefers (p_cur, profArray[s_cur->linked_to[i]]) && (profArray[s_cur->linked_to[i]]->idx < PREFS-1)) {
                     printf("removing link: professor [%d] to school [%d]\n", s_cur->linked_to[i], s_cur->id-1);
                     int to_kick = s_cur->kicks (i); // kicks professor
                     profArray[to_kick]->getsDumped (); // undo link between professor and school
@@ -255,6 +257,12 @@ int main (void) {
     */
     try {
         stableMatching (profArray, schArray);
+        for (int i = 0; i < NUM_PROFESSORS; i++) {
+            printf("P%d -> E%d\n", profArray[i]->id, profArray[i]->linked_to);
+        }
+        for (int i = 0; i < NUM_SCHOOLS; i++) {
+            printf("E%d : [P%d, P%d]\n", schArray[i]->id, schArray[i]->linked_to[0], schArray[i]->linked_to[1]);
+        }
     }
     catch (invalid_argument& ia) {
         cout << "invalid_argument: " << ia.what() << endl;
