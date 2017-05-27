@@ -25,11 +25,18 @@
     - Caso queira salvar a saida em um arquivo faça
         $ ./pspatch > saida.txt
 3. Entrada
-    - Se constitui em um arquivo .txt entitulado input.txt contendo os dados de professores a serem alocados em escolas de suas preferência, bem como as escolas com suas preferências de habilitações. No caso dos professores, cada um deve ter 5 escolas em que querem lecionar ordenada da maior prioridade para a menor (esqurda para a direita). Além disso, o professor deve informar seu número de habilitações. Enquanto que as escolas devem informar o número de habilitações que desejam de um professor.
-    - O algoritmo apresentado neste programa, conforme o especificado no roteiro, produz um emparelhamento perfeito e estável onde todos os professores estão alocados em alguma escola e dentro de suas preferências.
+    - Se constitui em um arquivo .txt entitulado input.txt contendo os dados de professores a serem alocados
+    em escolas de suas preferência, bem como as escolas com suas preferências de habilitações.
+    No caso dos professores, cada um deve ter 5 escolas em que querem lecionar ordenada da maior prioridade
+    para a menor (esqurda para a direita). Além disso, o professor deve informar seu número de habilitações.
+    Enquanto que as escolas devem informar o número de habilitações que desejam de um professor.
+    - O algoritmo apresentado neste programa, conforme o especificado no roteiro, produz um emparelhamento
+    perfeito e estável onde todos os professores estão alocados em alguma escola e dentro de suas preferências.
 4. Saída
-    - Será uma lista onde cada linha tem o formado (En): [Pm, Po], onde n e (m,o) é o número da escola e professores que foram alocados para esta, respectivamente.
-    - No final será apresentada a distribuição de nível de preferência por professor. Isto é, quantos professores ficaram alocados em sua primeira preferência, em sua segunda e assim por diante.
+    - Será uma lista onde cada linha tem o formado (En): [Pm, Po], onde n e (m,o) é o número da escola e
+    professores que foram alocados para esta, respectivamente.
+    - No final será apresentada a distribuição de nível de preferência por professor.
+    Isto é, quantos professores ficaram alocados em sua primeira preferência, em sua segunda e assim por diante.
  */
 
 #include <cstdlib>
