@@ -1,0 +1,62 @@
+  Exibindo emparelhamento no formato
+  (código escola) : [código professor 1, código professor 2]
+
+  (E 1): [P100, P 54]
+  (E 2): [P 40, P 56]
+  (E 3): [P  3, P 98]
+  (E 4): [P 45, P 99]
+  (E 5): [P  5, P  2]
+  (E 6): [P 95, P 47]
+  (E 7): [P 74, P 94]
+  (E 8): [P 59, P 61]
+  (E 9): [P  4, P 92]
+  (E10): [P 10, P 23]
+  (E11): [P 46, P 90]
+  (E12): [P 64, P 66]
+  (E13): [P 76, P  6]
+  (E14): [P 14, P 87]
+  (E15): [P 15, P 86]
+  (E16): [P 16, P 85]
+  (E17): [P 84, P  8]
+  (E18): [P 18, P 83]
+  (E19): [P 82, P 19]
+  (E20): [P 20, P 81]
+  (E21): [P 21, P 80]
+  (E22): [P 22, P 79]
+  (E23): [P 29, P 78]
+  (E24): [P 24, P 77]
+  (E25): [P 25, P 11]
+  (E26): [P 26, P 75]
+  (E27): [P 12, P  1]
+  (E28): [P 28, P 73]
+  (E29): [P 13, P 72]
+  (E30): [P 30, P 71]
+  (E31): [P 31, P 70]
+  (E32): [P 69, P 37]
+  (E33): [P 33, P 68]
+  (E34): [P 34, P 67]
+  (E35): [P  9, P 17]
+  (E36): [P 36, P 65]
+  (E37): [P  7, P 88]
+  (E38): [P 38, P 63]
+  (E39): [P 39, P 62]
+  (E40): [P 50, P 49]
+  (E41): [P 41, P 60]
+  (E42): [P 93, P 42]
+  (E43): [P 43, P 58]
+  (E44): [P 89, P 57]
+  (E45): [P 96, P 27]
+  (E46): [P 97, P 55]
+  (E47): [P 53, P 91]
+  (E48): [P 44, P 48]
+  (E49): [P 51, P 52]
+  (E50): [P 35, P 32]
+
+
+  Distribuição:
+ >> 38 professores alocados na primeira escola da lista.
+ >> 14 professores alocados na segunda escola da lista.
+ >> 27 professores alocados na terceira escola da lista.
+ >> 12 professores alocados na quarta escola da lista.
+ >>  9 professores alocados na quinta escola da lista.
+
